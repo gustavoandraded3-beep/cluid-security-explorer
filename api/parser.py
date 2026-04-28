@@ -40,9 +40,27 @@ def clean_val(v):
 def parse_perm(v):
     raw = clean_val(v)
     if not raw: return ""
-    low = raw.lower()
-    if low in ("yes", "true", "1"): return "Yes"
-    if low in ("no", "false", "0"): return "No"
+    low = raw.lower().strip()
+
+    if low in ("no", "false", "0", "no*"):
+        return "No"
+
+    # Business Unit variants
+    if "business unit" in low or low == "business unit":
+        return "Business Unit"
+
+    # Own + Reportees variants
+    if ("own" in low and "report" in low) or "reportees" in low:
+        return "Yes - Own & Reportees"
+
+    # Own records only
+    if "own" in low:
+        return "Yes - Own"
+
+    # Plain yes
+    if low in ("yes", "true", "1", "user"):
+        return "Yes"
+
     return raw
 
 def parse_standard_sheet(df):
