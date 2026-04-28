@@ -1,43 +1,51 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from flask import Flask, request, jsonify
 import io
-import csv
+import sys
+import os
+
+# Make sure parser.py in same directory is importable
+sys.path.insert(0, os.path.dirname(__file__))
 from parser import parse_excel
 
-app = FastAPI()
+app = Flask(__name__)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+def cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
-@app.post("/api/upload")
-async def upload_file(file: UploadFile = File(...)):
-    """
-    Parse the Excel file and return ALL data in a single response.
-    This works around Vercel's stateless serverless functions —
-    the frontend stores the result in localStorage.
-    """
-    if not file.filename.endswith(".xlsx"):
-        raise HTTPException(400, "Only .xlsx files are supported")
-    contents = await file.read()
+@app.after_request
+def after_request(response):
+    return cors(response)
+
+@app.route('/api/upload', methods=['POST', 'OPTIONS'])
+def upload_file():
+    if request.method == 'OPTIONS':
+        return jsonify({}), 200
+    
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file provided'}), 400
+    
+    f = request.files['file']
+    if not f.filename.endswith('.xlsx'):
+        return jsonify({'error': 'Only .xlsx files are supported'}), 400
+    
     try:
+        contents = f.read()
         parsed = parse_excel(io.BytesIO(contents))
-        return {
-            "success": True,
-            "data": parsed,          # full data returned here
-            "summary": {
-                "roles": len(parsed.get("roles", {})),
-                "teams": len(parsed.get("teams", [])),
-                "total_assignments": len(parsed.get("role_assignments", [])),
+        return jsonify({
+            'success': True,
+            'data': parsed,
+            'summary': {
+                'roles': len(parsed.get('roles', {})),
+                'teams': len(parsed.get('teams', [])),
+                'total_assignments': len(parsed.get('role_assignments', [])),
             }
-        }
+        })
     except Exception as e:
-        raise HTTPException(500, f"Failed to parse file: {str(e)}")
+        return jsonify({'error': f'Failed to parse file: {str(e)}'}), 500
 
-@app.get("/api/health")
+@app.route('/api/health', methods=['GET'])
 def health():
-    return {"status": "ok"}
+    return jsonify({'status': 'ok'})
