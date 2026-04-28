@@ -16,9 +16,6 @@ export default function RolesView({ data, navigate }) {
       <div className="filter-row">
         <input className="filter-input" placeholder="🔍 Filter roles..." value={filter}
           onChange={e => setFilter(e.target.value)} style={{ flex: 1, maxWidth: 320 }} />
-        <button className="btn btn-ghost" onClick={() => window.open('/api/export/csv', '_blank')}>
-          📥 Export All CSV
-        </button>
         <span style={{ color: 'var(--text3)', fontSize: 12 }}>{sorted.length} roles</span>
       </div>
 
@@ -31,8 +28,6 @@ export default function RolesView({ data, navigate }) {
               <th>Create</th>
               <th>Edit / Write</th>
               <th>Delete</th>
-              <th>Used By</th>
-              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -61,17 +56,6 @@ export default function RolesView({ data, navigate }) {
                     {eff.can_delete?.length > 0
                       ? <span style={{ color: 'var(--danger)', fontWeight: 600 }}>⚠ {eff.can_delete.length}</span>
                       : <span className="perm-no">—</span>}
-                  </td>
-                  <td>
-                    {role.used_by?.length > 0
-                      ? <span className="badge badge-blue">{role.used_by.length}</span>
-                      : <span className="perm-no">—</span>}
-                  </td>
-                  <td onClick={e => e.stopPropagation()}>
-                    <button className="btn btn-ghost" style={{ padding: '3px 10px', fontSize: 11 }}
-                      onClick={() => window.open(`/api/export/csv?role=${encodeURIComponent(name)}`, '_blank')}>
-                      CSV
-                    </button>
                   </td>
                 </tr>
               );
