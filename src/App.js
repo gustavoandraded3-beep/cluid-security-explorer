@@ -8,7 +8,6 @@ import TeamsView from './views/TeamsView';
 import CompareView from './views/CompareView';
 import AssignmentsView from './views/AssignmentsView';
 import SearchView from './views/SearchView';
-import FieldSecurityView from './views/FieldSecurityView';
 
 const STORAGE_KEY = 'cluid_security_data_v1';
 
@@ -43,7 +42,7 @@ export default function App() {
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       const result = await res.json();
       if (!res.ok) {
-        setUploadError(result.detail || 'Upload failed. Please try again.');
+        setUploadError(result.detail || result.error || 'Upload failed. Please try again.');
         return;
       }
       if (result.success && result.data) {
@@ -86,7 +85,6 @@ export default function App() {
     { id: 'teams',          label: 'Teams',            icon: '👥' },
     { id: 'assignments',    label: 'Role Assignments', icon: '📋' },
     { id: 'compare',        label: 'Compare Roles',    icon: '⚖️' },
-    { id: 'field-security', label: 'Field Security',   icon: '🔒' },
   ];
 
   const isActive = (id) => page === id || (page === 'role-detail' && id === 'roles');
@@ -162,7 +160,6 @@ export default function App() {
           {page === 'teams'          && data && <TeamsView data={data} />}
           {page === 'assignments'    && data && <AssignmentsView data={data} navigate={navigate} />}
           {page === 'compare'        && data && <CompareView data={data} />}
-          {page === 'field-security' && data && <FieldSecurityView data={data} />}
           {page === 'search'         && data && <SearchView query={searchQuery} data={data} navigate={navigate} />}
         </div>
       </div>
